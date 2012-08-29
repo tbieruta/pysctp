@@ -482,11 +482,11 @@ def notification_factory(raw_notification):
 	except:
 		raise ValueError("Dictionary passed as parameter has no 'type' attribute")
 
-	if not notification_table.has_key(num_type):
+	if num_type not in notification_table:
 		# raw object since we do not know the type of notification
 		o = notification(raw_notification)
-		print >> sys.stderr, "Warning: an unknown notification event (value %d) has arrived" % \
-			num_type
+		print("Warning: an unknown notification event (value %d) has arrived" % \
+			num_type, file=sys.stderr)
 	else:
 		o = notification_table[num_type](raw_notification)
 	return o
@@ -1053,7 +1053,7 @@ class sctpsocket(object):
 		SCTP implementations support connectx(). It will raise an RuntimeError()
 		if not supported.
 		"""
-		if _sctp.__dict__.has_key("connectx"):
+		if "connectx" in _sctp.__dict__:
 			_sctp.connectx(self._sk.fileno(), sockaddrs)
 		else:
 			raise RuntimeError("Underlying SCTP implementation does not have connectx()")

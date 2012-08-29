@@ -106,10 +106,22 @@ static PyMethodDef _sctpMethods[] =
 	{ NULL, NULL }
 };
 
-void init_sctp(void)
+static PyModuleDef sctpmodule = {
+	PyModuleDef_HEAD_INIT,
+	"_sctp",
+	"SCTP protocol low-level bindings",
+	-1,
+	_sctpMethods,
+	NULL, NULL, NULL, NULL
+};
+
+PyMODINIT_FUNC PyInit__sctp(void)
 {
-	Py_InitModule4("_sctp", _sctpMethods, "SCTP protocol low-level bindings", 0, PYTHON_API_VERSION);
-	return;
+	PyObject* m;
+	m = PyModule_Create(&sctpmodule);
+	if(m == NULL)
+		return NULL;
+	return m;
 }
 
 typedef struct ktuple {
@@ -220,7 +232,7 @@ static PyObject* getconstant(PyObject* dummy, PyObject* args)
 	if (PyArg_ParseTuple(args, "s", &needle)) {
 		for(haystack = &(_constants[0]); haystack->key; ++haystack) {
 			if (strcmp(haystack->key, needle) == 0) {
-				ret = PyInt_FromLong(haystack->value);
+				ret = PyLong_FromLong(haystack->value);
 				break;
 			}
 		}
@@ -365,23 +377,23 @@ static PyObject* get_assocparams(PyObject* dummy, PyObject* args)
 	
 	ok = PyArg_ParseTuple(args, "iO", &fd, &dict) && PyDict_Check(dict);
 	ok = ok && (oassoc_id = PyDict_GetItemString(dict, "assoc_id"));
-	ok = ok && PyInt_Check(oassoc_id);
+	ok = ok && PyLong_Check(oassoc_id);
 
 	if (! ok) {
 		return ret;
 	}
 
 	bzero(&v, sizeof(v));
-	v.sasoc_assoc_id = PyInt_AsLong(oassoc_id);
+	v.sasoc_assoc_id = PyLong_AsLong(oassoc_id);
 
 	if (getsockopt(fd, SOL_SCTP, SCTP_ASSOCINFO, &v, &lv)) {
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
-		PyDict_SetItemString(dict, "assocmaxrxt", PyInt_FromLong(v.sasoc_asocmaxrxt));
-		PyDict_SetItemString(dict, "number_peer_destinations", PyInt_FromLong(v.sasoc_number_peer_destinations));
-		PyDict_SetItemString(dict, "peer_rwnd", PyInt_FromLong(v.sasoc_peer_rwnd));
-		PyDict_SetItemString(dict, "local_rwnd", PyInt_FromLong(v.sasoc_local_rwnd));
-		PyDict_SetItemString(dict, "cookie_life", PyInt_FromLong(v.sasoc_cookie_life));
+		PyDict_SetItemString(dict, "assocmaxrxt", PyLong_FromLong(v.sasoc_asocmaxrxt));
+		PyDict_SetItemString(dict, "number_peer_destinations", PyLong_FromLong(v.sasoc_number_peer_destinations));
+		PyDict_SetItemString(dict, "peer_rwnd", PyLong_FromLong(v.sasoc_peer_rwnd));
+		PyDict_SetItemString(dict, "local_rwnd", PyLong_FromLong(v.sasoc_local_rwnd));
+		PyDict_SetItemString(dict, "cookie_life", PyLong_FromLong(v.sasoc_cookie_life));
 		ret = Py_None; Py_INCREF(ret);
 	}
 
@@ -410,33 +422,33 @@ static PyObject* set_assocparams(PyObject* dummy, PyObject* args)
 	ok = ok && (opeer_rwnd = PyDict_GetItemString(dict, "peer_rwnd"));
 	ok = ok && (olocal_rwnd = PyDict_GetItemString(dict, "local_rwnd"));
 	ok = ok && (ocookie_life = PyDict_GetItemString(dict, "cookie_life"));
-	ok = ok && PyInt_Check(oassoc_id);
-	ok = ok && PyInt_Check(oassocmaxrxt);
-	ok = ok && PyInt_Check(onumber_peer_destinations);
-	ok = ok && PyInt_Check(opeer_rwnd);
-	ok = ok && PyInt_Check(olocal_rwnd);
-	ok = ok && PyInt_Check(ocookie_life);
+	ok = ok && PyLong_Check(oassoc_id);
+	ok = ok && PyLong_Check(oassocmaxrxt);
+	ok = ok && PyLong_Check(onumber_peer_destinations);
+	ok = ok && PyLong_Check(opeer_rwnd);
+	ok = ok && PyLong_Check(olocal_rwnd);
+	ok = ok && PyLong_Check(ocookie_life);
 
 	if (! ok) {
 		return ret;
 	}
 
 	bzero(&v, sizeof(v));
-	v.sasoc_assoc_id = PyInt_AsLong(oassoc_id);
-	v.sasoc_asocmaxrxt = PyInt_AsLong(oassocmaxrxt);
-	v.sasoc_number_peer_destinations = PyInt_AsLong(onumber_peer_destinations);
-	v.sasoc_peer_rwnd = PyInt_AsLong(opeer_rwnd);
-	v.sasoc_local_rwnd = PyInt_AsLong(olocal_rwnd);
-	v.sasoc_cookie_life = PyInt_AsLong(ocookie_life);
+	v.sasoc_assoc_id = PyLong_AsLong(oassoc_id);
+	v.sasoc_asocmaxrxt = PyLong_AsLong(oassocmaxrxt);
+	v.sasoc_number_peer_destinations = PyLong_AsLong(onumber_peer_destinations);
+	v.sasoc_peer_rwnd = PyLong_AsLong(opeer_rwnd);
+	v.sasoc_local_rwnd = PyLong_AsLong(olocal_rwnd);
+	v.sasoc_cookie_life = PyLong_AsLong(ocookie_life);
 
 	if (setsockopt(fd, SOL_SCTP, SCTP_ASSOCINFO, &v, sizeof(v))) {
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
-		PyDict_SetItemString(dict, "assocmaxrxt", PyInt_FromLong(v.sasoc_asocmaxrxt));
-		PyDict_SetItemString(dict, "number_peer_destinations", PyInt_FromLong(v.sasoc_number_peer_destinations));
-		PyDict_SetItemString(dict, "peer_rwnd", PyInt_FromLong(v.sasoc_peer_rwnd));
-		PyDict_SetItemString(dict, "local_rwnd", PyInt_FromLong(v.sasoc_local_rwnd));
-		PyDict_SetItemString(dict, "cookie_life", PyInt_FromLong(v.sasoc_cookie_life));
+		PyDict_SetItemString(dict, "assocmaxrxt", PyLong_FromLong(v.sasoc_asocmaxrxt));
+		PyDict_SetItemString(dict, "number_peer_destinations", PyLong_FromLong(v.sasoc_number_peer_destinations));
+		PyDict_SetItemString(dict, "peer_rwnd", PyLong_FromLong(v.sasoc_peer_rwnd));
+		PyDict_SetItemString(dict, "local_rwnd", PyLong_FromLong(v.sasoc_local_rwnd));
+		PyDict_SetItemString(dict, "cookie_life", PyLong_FromLong(v.sasoc_cookie_life));
 		ret = Py_None; Py_INCREF(ret);
 	}
 
@@ -463,14 +475,14 @@ static PyObject* get_paddrparams(PyObject* dummy, PyObject* args)
 	ok = ok && (oassoc_id = PyDict_GetItemString(dict, "assoc_id"));
 	ok = ok && (oaddresstuple = PyDict_GetItemString(dict, "sockaddr"));
 	ok = ok && PyArg_ParseTuple(oaddresstuple, "si", &address, &port);
-	ok = ok && PyInt_Check(oassoc_id);
+	ok = ok && PyLong_Check(oassoc_id);
 
 	if (! ok) {
 		return ret;
 	}
 
 	bzero(&v, sizeof(v));
-	v.spp_assoc_id = PyInt_AsLong(oassoc_id);
+	v.spp_assoc_id = PyLong_AsLong(oassoc_id);
 
 	if (! to_sockaddr(address, port, (struct sockaddr*) &(v.spp_address), &slen_dummy)) {
 		PyErr_SetString(PyExc_ValueError, "address could not be translated");
@@ -480,12 +492,12 @@ static PyObject* get_paddrparams(PyObject* dummy, PyObject* args)
 	if (getsockopt(fd, SOL_SCTP, SCTP_PEER_ADDR_PARAMS, &v, &lv)) {
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
-		PyDict_SetItemString(dict, "hbinterval", PyInt_FromLong(v.spp_hbinterval));
-		PyDict_SetItemString(dict, "pathmaxrxt", PyInt_FromLong(v.spp_pathmaxrxt));
+		PyDict_SetItemString(dict, "hbinterval", PyLong_FromLong(v.spp_hbinterval));
+		PyDict_SetItemString(dict, "pathmaxrxt", PyLong_FromLong(v.spp_pathmaxrxt));
 #ifdef SCTP_DRAFT10_LEVEL
-		PyDict_SetItemString(dict, "pathmtu", PyInt_FromLong(v.spp_pathmtu));
-		PyDict_SetItemString(dict, "sackdelay", PyInt_FromLong(v.spp_sackdelay));
-		PyDict_SetItemString(dict, "flags", PyInt_FromLong(v.spp_flags));
+		PyDict_SetItemString(dict, "pathmtu", PyLong_FromLong(v.spp_pathmtu));
+		PyDict_SetItemString(dict, "sackdelay", PyLong_FromLong(v.spp_sackdelay));
+		PyDict_SetItemString(dict, "flags", PyLong_FromLong(v.spp_flags));
 #endif
 		ret = Py_None; Py_INCREF(ret);
 	}
@@ -525,25 +537,25 @@ static PyObject* set_paddrparams(PyObject* dummy, PyObject* args)
 
 	ok = ok && PyArg_ParseTuple(oaddresstuple, "si", &address, &port);
 
-	ok = ok && PyInt_Check(oassoc_id);
-	ok = ok && PyInt_Check(ohbinterval);
-	ok = ok && PyInt_Check(opathmaxrxt);
-	ok = ok && PyInt_Check(opathmtu);
-	ok = ok && PyInt_Check(osackdelay);
-	ok = ok && PyInt_Check(oflags);
+	ok = ok && PyLong_Check(oassoc_id);
+	ok = ok && PyLong_Check(ohbinterval);
+	ok = ok && PyLong_Check(opathmaxrxt);
+	ok = ok && PyLong_Check(opathmtu);
+	ok = ok && PyLong_Check(osackdelay);
+	ok = ok && PyLong_Check(oflags);
 
 	if (! ok) {
 		return ret;
 	}
 
 	bzero(&v, sizeof(v));
-	v.spp_assoc_id = PyInt_AsLong(oassoc_id);
-	v.spp_hbinterval = PyInt_AsLong(ohbinterval);
-	v.spp_pathmaxrxt = PyInt_AsLong(opathmaxrxt);
+	v.spp_assoc_id = PyLong_AsLong(oassoc_id);
+	v.spp_hbinterval = PyLong_AsLong(ohbinterval);
+	v.spp_pathmaxrxt = PyLong_AsLong(opathmaxrxt);
 #ifdef SCTP_DRAFT10_LEVEL
-	v.spp_pathmtu = PyInt_AsLong(opathmtu);
-	v.spp_sackdelay = PyInt_AsLong(osackdelay);
-	v.spp_flags = PyInt_AsLong(oflags);
+	v.spp_pathmtu = PyLong_AsLong(opathmtu);
+	v.spp_sackdelay = PyLong_AsLong(osackdelay);
+	v.spp_flags = PyLong_AsLong(oflags);
 #endif
 
 	if (! to_sockaddr(address, port, (struct sockaddr*) &(v.spp_address), &slen_dummy)) {
@@ -554,12 +566,12 @@ static PyObject* set_paddrparams(PyObject* dummy, PyObject* args)
 	if (setsockopt(fd, SOL_SCTP, SCTP_PEER_ADDR_PARAMS, &v, sizeof(v))) {
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
-		PyDict_SetItemString(dict, "hbinterval", PyInt_FromLong(v.spp_hbinterval));
-		PyDict_SetItemString(dict, "pathmaxrxt", PyInt_FromLong(v.spp_pathmaxrxt));
+		PyDict_SetItemString(dict, "hbinterval", PyLong_FromLong(v.spp_hbinterval));
+		PyDict_SetItemString(dict, "pathmaxrxt", PyLong_FromLong(v.spp_pathmaxrxt));
 #ifdef SCTP_DRAFT10_LEVEL
-		PyDict_SetItemString(dict, "pathmtu", PyInt_FromLong(v.spp_pathmtu));
-		PyDict_SetItemString(dict, "sackdelay", PyInt_FromLong(v.spp_sackdelay));
-		PyDict_SetItemString(dict, "flags", PyInt_FromLong(v.spp_flags));
+		PyDict_SetItemString(dict, "pathmtu", PyLong_FromLong(v.spp_pathmtu));
+		PyDict_SetItemString(dict, "sackdelay", PyLong_FromLong(v.spp_sackdelay));
+		PyDict_SetItemString(dict, "flags", PyLong_FromLong(v.spp_flags));
 #endif
 		ret = Py_None; Py_INCREF(ret);
 	}
@@ -584,33 +596,33 @@ static PyObject* get_status(PyObject* dummy, PyObject* args)
 	int ok;
 	
 	ok = PyArg_ParseTuple(args, "iOO", &fd, &dict, &dict2) && \
-	     					PyDict_Check(dict) && PyDict_Check(dict2);
+						PyDict_Check(dict) && PyDict_Check(dict2);
 	ok = ok && (oassoc_id = PyDict_GetItemString(dict, "assoc_id"));
-	ok = ok && PyInt_Check(oassoc_id);
+	ok = ok && PyLong_Check(oassoc_id);
 
 	if (! ok) {
 		return ret;
 	}
 
 	bzero(&v, sizeof(v));
-	v.sstat_assoc_id = PyInt_AsLong(oassoc_id);
+	v.sstat_assoc_id = PyLong_AsLong(oassoc_id);
 
 	if (getsockopt(fd, SOL_SCTP, SCTP_STATUS, &v, &lv)) {
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
-		PyDict_SetItemString(dict, "state", PyInt_FromLong(v.sstat_state));
-		PyDict_SetItemString(dict, "rwnd", PyInt_FromLong(v.sstat_rwnd));
-		PyDict_SetItemString(dict, "unackdata", PyInt_FromLong(v.sstat_unackdata));
-		PyDict_SetItemString(dict, "penddata", PyInt_FromLong(v.sstat_penddata));
-		PyDict_SetItemString(dict, "instrms", PyInt_FromLong(v.sstat_instrms));
-		PyDict_SetItemString(dict, "outstrms", PyInt_FromLong(v.sstat_outstrms));
-		PyDict_SetItemString(dict, "fragmentation_point", PyInt_FromLong(v.sstat_fragmentation_point));
+		PyDict_SetItemString(dict, "state", PyLong_FromLong(v.sstat_state));
+		PyDict_SetItemString(dict, "rwnd", PyLong_FromLong(v.sstat_rwnd));
+		PyDict_SetItemString(dict, "unackdata", PyLong_FromLong(v.sstat_unackdata));
+		PyDict_SetItemString(dict, "penddata", PyLong_FromLong(v.sstat_penddata));
+		PyDict_SetItemString(dict, "instrms", PyLong_FromLong(v.sstat_instrms));
+		PyDict_SetItemString(dict, "outstrms", PyLong_FromLong(v.sstat_outstrms));
+		PyDict_SetItemString(dict, "fragmentation_point", PyLong_FromLong(v.sstat_fragmentation_point));
 
 		if (from_sockaddr((struct sockaddr*) &(v.sstat_primary.spinfo_address), &family, 
 					&len, &port, caddr, sizeof(caddr))) {
 			oaddr = PyTuple_New(2);
-			PyTuple_SetItem(oaddr, 0, PyString_FromString(caddr));
-			PyTuple_SetItem(oaddr, 1, PyInt_FromLong(port));
+			PyTuple_SetItem(oaddr, 0, PyUnicode_FromString(caddr));
+			PyTuple_SetItem(oaddr, 1, PyLong_FromLong(port));
 		} else {
 			// something went wrong
 			oaddr = Py_None;
@@ -618,12 +630,12 @@ static PyObject* get_status(PyObject* dummy, PyObject* args)
 		}
 		
 		PyDict_SetItemString(dict2, "sockaddr", oaddr);
-		PyDict_SetItemString(dict2, "assoc_id", PyInt_FromLong(v.sstat_primary.spinfo_assoc_id));
-		PyDict_SetItemString(dict2, "state", PyInt_FromLong(v.sstat_primary.spinfo_state));
-		PyDict_SetItemString(dict2, "cwnd", PyInt_FromLong(v.sstat_primary.spinfo_cwnd));
-		PyDict_SetItemString(dict2, "srtt", PyInt_FromLong(v.sstat_primary.spinfo_srtt));
-		PyDict_SetItemString(dict2, "rto", PyInt_FromLong(v.sstat_primary.spinfo_rto));
-		PyDict_SetItemString(dict2, "mtu", PyInt_FromLong(v.sstat_primary.spinfo_mtu));
+		PyDict_SetItemString(dict2, "assoc_id", PyLong_FromLong(v.sstat_primary.spinfo_assoc_id));
+		PyDict_SetItemString(dict2, "state", PyLong_FromLong(v.sstat_primary.spinfo_state));
+		PyDict_SetItemString(dict2, "cwnd", PyLong_FromLong(v.sstat_primary.spinfo_cwnd));
+		PyDict_SetItemString(dict2, "srtt", PyLong_FromLong(v.sstat_primary.spinfo_srtt));
+		PyDict_SetItemString(dict2, "rto", PyLong_FromLong(v.sstat_primary.spinfo_rto));
+		PyDict_SetItemString(dict2, "mtu", PyLong_FromLong(v.sstat_primary.spinfo_mtu));
 		ret = Py_None; Py_INCREF(ret);
 	}
 
@@ -647,7 +659,7 @@ static PyObject* get_paddrinfo(PyObject* dummy, PyObject* args)
 	ok = PyArg_ParseTuple(args, "iO", &fd, &dict) && PyDict_Check(dict);
 	ok = ok && (oassoc_id = PyDict_GetItemString(dict, "assoc_id"));
 	ok = ok && (oaddresstuple = PyDict_GetItemString(dict, "sockaddr"));
-	ok = ok && PyInt_Check(oassoc_id);
+	ok = ok && PyLong_Check(oassoc_id);
 	ok = ok && PyArg_ParseTuple(oaddresstuple, "si", &address, &port);
 
 	if (! ok) {
@@ -655,7 +667,7 @@ static PyObject* get_paddrinfo(PyObject* dummy, PyObject* args)
 	}
 
 	bzero(&v, sizeof(v));
-	v.spinfo_assoc_id = PyInt_AsLong(oassoc_id);
+	v.spinfo_assoc_id = PyLong_AsLong(oassoc_id);
 	if (! to_sockaddr(address, port, (struct sockaddr*) &(v.spinfo_address), &slen_dummy)) {
 		PyErr_SetString(PyExc_ValueError, "address could not be translated");
 		return ret;
@@ -664,11 +676,11 @@ static PyObject* get_paddrinfo(PyObject* dummy, PyObject* args)
 	if (getsockopt(fd, SOL_SCTP, SCTP_GET_PEER_ADDR_INFO, &v, &lv)) {
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
-		PyDict_SetItemString(dict, "state", PyInt_FromLong(v.spinfo_state));
-		PyDict_SetItemString(dict, "cwnd", PyInt_FromLong(v.spinfo_cwnd));
-		PyDict_SetItemString(dict, "srtt", PyInt_FromLong(v.spinfo_srtt));
-		PyDict_SetItemString(dict, "rto", PyInt_FromLong(v.spinfo_rto));
-		PyDict_SetItemString(dict, "mtu", PyInt_FromLong(v.spinfo_mtu));
+		PyDict_SetItemString(dict, "state", PyLong_FromLong(v.spinfo_state));
+		PyDict_SetItemString(dict, "cwnd", PyLong_FromLong(v.spinfo_cwnd));
+		PyDict_SetItemString(dict, "srtt", PyLong_FromLong(v.spinfo_srtt));
+		PyDict_SetItemString(dict, "rto", PyLong_FromLong(v.spinfo_rto));
+		PyDict_SetItemString(dict, "mtu", PyLong_FromLong(v.spinfo_mtu));
 		ret = Py_None; Py_INCREF(ret);
 	}
 
@@ -687,21 +699,21 @@ static PyObject* get_rtoinfo(PyObject* dummy, PyObject* args)
 	
 	ok = PyArg_ParseTuple(args, "iO", &fd, &dict) && PyDict_Check(dict);
 	ok = ok && (oassoc_id = PyDict_GetItemString(dict, "assoc_id"));
-	ok = ok && PyInt_Check(oassoc_id);
+	ok = ok && PyLong_Check(oassoc_id);
 
 	if (! ok) {
 		return ret;
 	}
 
 	bzero(&v, sizeof(v));
-	v.srto_assoc_id = PyInt_AsLong(oassoc_id);
+	v.srto_assoc_id = PyLong_AsLong(oassoc_id);
 
 	if (getsockopt(fd, SOL_SCTP, SCTP_RTOINFO, &v, &lv)) {
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
-		PyDict_SetItemString(dict, "initial", PyInt_FromLong(v.srto_initial));
-		PyDict_SetItemString(dict, "max", PyInt_FromLong(v.srto_max));
-		PyDict_SetItemString(dict, "min", PyInt_FromLong(v.srto_min));
+		PyDict_SetItemString(dict, "initial", PyLong_FromLong(v.srto_initial));
+		PyDict_SetItemString(dict, "max", PyLong_FromLong(v.srto_max));
+		PyDict_SetItemString(dict, "min", PyLong_FromLong(v.srto_min));
 		ret = Py_None; Py_INCREF(ret);
 	}
 
@@ -726,27 +738,27 @@ static PyObject* set_rtoinfo(PyObject* dummy, PyObject* args)
 	ok = ok && (oinitial = PyDict_GetItemString(dict, "initial"));
 	ok = ok && (omin = PyDict_GetItemString(dict, "min"));
 	ok = ok && (omax = PyDict_GetItemString(dict, "max"));
-	ok = ok && PyInt_Check(oassoc_id);
-	ok = ok && PyInt_Check(oinitial);
-	ok = ok && PyInt_Check(omin);
-	ok = ok && PyInt_Check(omax);
+	ok = ok && PyLong_Check(oassoc_id);
+	ok = ok && PyLong_Check(oinitial);
+	ok = ok && PyLong_Check(omin);
+	ok = ok && PyLong_Check(omax);
 
 	if (! ok) {
 		return ret;
 	}
 
 	bzero(&v, sizeof(v));
-	v.srto_assoc_id = PyInt_AsLong(oassoc_id);
-	v.srto_initial = PyInt_AsLong(oinitial);
-	v.srto_min = PyInt_AsLong(omin);
-	v.srto_max = PyInt_AsLong(omax);
+	v.srto_assoc_id = PyLong_AsLong(oassoc_id);
+	v.srto_initial = PyLong_AsLong(oinitial);
+	v.srto_min = PyLong_AsLong(omin);
+	v.srto_max = PyLong_AsLong(omax);
 
 	if (setsockopt(fd, SOL_SCTP, SCTP_RTOINFO, &v, sizeof(v))) {
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
-		PyDict_SetItemString(dict, "initial", PyInt_FromLong(v.srto_initial));
-		PyDict_SetItemString(dict, "max", PyInt_FromLong(v.srto_max));
-		PyDict_SetItemString(dict, "min", PyInt_FromLong(v.srto_min));
+		PyDict_SetItemString(dict, "initial", PyLong_FromLong(v.srto_initial));
+		PyDict_SetItemString(dict, "max", PyLong_FromLong(v.srto_max));
+		PyDict_SetItemString(dict, "min", PyLong_FromLong(v.srto_min));
 		ret = Py_None; Py_INCREF(ret);
 	}
 
@@ -768,10 +780,10 @@ static PyObject* get_initparams(PyObject* dummy, PyObject* args)
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
 		ret = PyDict_New();
-		PyDict_SetItemString(ret, "_num_ostreams", PyInt_FromLong(v.sinit_num_ostreams));
-		PyDict_SetItemString(ret, "_max_instreams", PyInt_FromLong(v.sinit_max_instreams));
-		PyDict_SetItemString(ret, "_max_attempts", PyInt_FromLong(v.sinit_max_attempts));
-		PyDict_SetItemString(ret, "_max_init_timeo", PyInt_FromLong(v.sinit_max_attempts));
+		PyDict_SetItemString(ret, "_num_ostreams", PyLong_FromLong(v.sinit_num_ostreams));
+		PyDict_SetItemString(ret, "_max_instreams", PyLong_FromLong(v.sinit_max_instreams));
+		PyDict_SetItemString(ret, "_max_attempts", PyLong_FromLong(v.sinit_max_attempts));
+		PyDict_SetItemString(ret, "_max_init_timeo", PyLong_FromLong(v.sinit_max_attempts));
 	}
 
 	return ret;
@@ -791,17 +803,17 @@ static PyObject* set_initparams(PyObject* dummy, PyObject* args)
 	ok = ok && (o_max_attempts = PyDict_GetItemString(ov, "_max_attempts"));
 	ok = ok && (o_max_init_timeo = PyDict_GetItemString(ov, "_max_init_timeo"));
 
-	ok = ok && (PyInt_Check(o_num_ostreams) != 0);
-	ok = ok && (PyInt_Check(o_max_instreams) != 0);
-	ok = ok && (PyInt_Check(o_max_attempts) != 0);
-	ok = ok && (PyInt_Check(o_max_init_timeo) != 0);
+	ok = ok && (PyLong_Check(o_num_ostreams) != 0);
+	ok = ok && (PyLong_Check(o_max_instreams) != 0);
+	ok = ok && (PyLong_Check(o_max_attempts) != 0);
+	ok = ok && (PyLong_Check(o_max_init_timeo) != 0);
 
 	if (ok) {
 		memset(&v, 0, sizeof(v));
-		v.sinit_num_ostreams = PyInt_AsLong(o_num_ostreams);
-		v.sinit_max_instreams = PyInt_AsLong(o_max_instreams);
-		v.sinit_max_attempts = PyInt_AsLong(o_max_attempts);
-		v.sinit_max_init_timeo = PyInt_AsLong(o_max_init_timeo);
+		v.sinit_num_ostreams = PyLong_AsLong(o_num_ostreams);
+		v.sinit_max_instreams = PyLong_AsLong(o_max_instreams);
+		v.sinit_max_attempts = PyLong_AsLong(o_max_attempts);
+		v.sinit_max_init_timeo = PyLong_AsLong(o_max_init_timeo);
 		
 		if (setsockopt(fd, SOL_SCTP, SCTP_INITMSG, &v, sizeof(v))) {
 			PyErr_SetFromErrno(PyExc_IOError);
@@ -822,7 +834,7 @@ static PyObject* peeloff(PyObject* dummy, PyObject* args)
 		if (fd < 0) {
 			PyErr_SetFromErrno(PyExc_IOError);
 		} else {
-			ret = PyInt_FromLong(fd);
+			ret = PyLong_FromLong(fd);
 		}
 	}
 
@@ -872,25 +884,25 @@ static PyObject* set_events(PyObject* dummy, PyObject* args)
 	ok = ok && (o_partial_delivery = PyDict_GetItemString(ov, "_partial_delivery"));
 	ok = ok && (o_adaptation_layer = PyDict_GetItemString(ov, "_adaptation_layer"));
 
-	ok = ok && (PyInt_Check(o_data_io) != 0);
-	ok = ok && (PyInt_Check(o_association) != 0);
-	ok = ok && (PyInt_Check(o_address) != 0);
-	ok = ok && (PyInt_Check(o_send_failure) != 0);
-	ok = ok && (PyInt_Check(o_peer_error) != 0);
-	ok = ok && (PyInt_Check(o_shutdown) != 0);
-	ok = ok && (PyInt_Check(o_send_failure) != 0);
-	ok = ok && (PyInt_Check(o_adaptation_layer) != 0);
+	ok = ok && (PyLong_Check(o_data_io) != 0);
+	ok = ok && (PyLong_Check(o_association) != 0);
+	ok = ok && (PyLong_Check(o_address) != 0);
+	ok = ok && (PyLong_Check(o_send_failure) != 0);
+	ok = ok && (PyLong_Check(o_peer_error) != 0);
+	ok = ok && (PyLong_Check(o_shutdown) != 0);
+	ok = ok && (PyLong_Check(o_send_failure) != 0);
+	ok = ok && (PyLong_Check(o_adaptation_layer) != 0);
 
 	if (ok) {
 		memset(&v, 0, sizeof(v));
-		v.sctp_data_io_event = PyInt_AsLong(o_data_io);
-		v.sctp_association_event = PyInt_AsLong(o_association);
-		v.sctp_address_event = PyInt_AsLong(o_address);
-		v.sctp_send_failure_event = PyInt_AsLong(o_send_failure);
-		v.sctp_peer_error_event = PyInt_AsLong(o_peer_error);
-		v.sctp_shutdown_event = PyInt_AsLong(o_shutdown);
-		v.sctp_partial_delivery_event = PyInt_AsLong(o_partial_delivery);
-		v.sctp_adaptation_layer_event = PyInt_AsLong(o_adaptation_layer);
+		v.sctp_data_io_event = PyLong_AsLong(o_data_io);
+		v.sctp_association_event = PyLong_AsLong(o_association);
+		v.sctp_address_event = PyLong_AsLong(o_address);
+		v.sctp_send_failure_event = PyLong_AsLong(o_send_failure);
+		v.sctp_peer_error_event = PyLong_AsLong(o_peer_error);
+		v.sctp_shutdown_event = PyLong_AsLong(o_shutdown);
+		v.sctp_partial_delivery_event = PyLong_AsLong(o_partial_delivery);
+		v.sctp_adaptation_layer_event = PyLong_AsLong(o_adaptation_layer);
 		
 		if (setsockopt(fd, SOL_SCTP, SCTP_EVENTS, &v, sizeof(v))) {
 			PyErr_SetFromErrno(PyExc_IOError);
@@ -911,7 +923,7 @@ static PyObject* get_maxseg(PyObject* dummy, PyObject* args)
 		if (getsockopt(fd, SOL_SCTP, SCTP_MAXSEG, &v, &lv)) {
 			PyErr_SetFromErrno(PyExc_IOError);
 		} else {
-			ret = PyInt_FromLong(v);
+			ret = PyLong_FromLong(v);
 		}
 	}
 	return ret;
@@ -973,7 +985,7 @@ static PyObject* get_autoclose(PyObject* dummy, PyObject* args)
 		if (getsockopt(fd, SOL_SCTP, SCTP_AUTOCLOSE, &v, &lv)) {
 			PyErr_SetFromErrno(PyExc_IOError);
 		} else {
-			ret = PyInt_FromLong(v);
+			ret = PyLong_FromLong(v);
 		}
 	}
 	return ret;
@@ -1004,7 +1016,7 @@ static PyObject* get_adaptation(PyObject* dummy, PyObject* args)
 		if (getsockopt(fd, SOL_SCTP, SCTP_ADAPTATION_LAYER, &v, &lv)) {
 			PyErr_SetFromErrno(PyExc_IOError);
 		} else {
-			ret = PyInt_FromLong(v);
+			ret = PyLong_FromLong(v);
 		}
 	}
 	return ret;
@@ -1118,12 +1130,12 @@ static PyObject* _sockaddr_test(PyObject* dummy, PyObject* args)
 
 	ret = PyTuple_New(4);
 	addrtupleret = PyTuple_New(2);
-	PyTuple_SetItem(ret, 0, PyString_FromFormat("family %d, size %d, address %s.%d", family, slen, caddr2, port));
-	PyTuple_SetItem(ret, 1, PyInt_FromLong(family));
-	PyTuple_SetItem(ret, 2, PyInt_FromLong(slen));
+	PyTuple_SetItem(ret, 0, PyUnicode_FromFormat("family %d, size %d, address %s.%d", family, slen, caddr2, port));
+	PyTuple_SetItem(ret, 1, PyLong_FromLong(family));
+	PyTuple_SetItem(ret, 2, PyLong_FromLong(slen));
 	PyTuple_SetItem(ret, 3, addrtupleret);
-	PyTuple_SetItem(addrtupleret, 0, PyString_FromString(caddr2));
-	PyTuple_SetItem(addrtupleret, 1, PyInt_FromLong(port));
+	PyTuple_SetItem(addrtupleret, 0, PyUnicode_FromString(caddr2));
+	PyTuple_SetItem(addrtupleret, 1, PyLong_FromLong(port));
 
 	return ret;
 }
@@ -1291,8 +1303,8 @@ static PyObject* getpaddrs(PyObject* dummy, PyObject* args)
 			if (from_sockaddr((struct sockaddr*) p, &family, &len, &port, 
 										addr, sizeof(addr))) {
 				oaddr = PyTuple_New(2);
-				PyTuple_SetItem(oaddr, 0, PyString_FromString(addr));
-				PyTuple_SetItem(oaddr, 1, PyInt_FromLong(port));
+				PyTuple_SetItem(oaddr, 0, PyUnicode_FromString(addr));
+				PyTuple_SetItem(oaddr, 1, PyLong_FromLong(port));
 				PyTuple_SetItem(ret, x, oaddr);
 			} else {
 				// something's wrong; not safe to continue
@@ -1350,8 +1362,8 @@ static PyObject* getladdrs(PyObject* dummy, PyObject* args)
 			if (from_sockaddr((struct sockaddr*) p, &family, &len, &port, 
 										addr, sizeof(addr))) {
 				oaddr = PyTuple_New(2);
-				PyTuple_SetItem(oaddr, 0, PyString_FromString(addr));
-				PyTuple_SetItem(oaddr, 1, PyInt_FromLong(port));
+				PyTuple_SetItem(oaddr, 0, PyUnicode_FromString(addr));
+				PyTuple_SetItem(oaddr, 1, PyLong_FromLong(port));
 				PyTuple_SetItem(ret, x, oaddr);
 			} else {
 				// something's wrong; not safe to continue
@@ -1398,7 +1410,7 @@ static PyObject* sctp_send_msg(PyObject* dummy, PyObject* args)
 	}
 
 	// TODO: "to" can contain and assoc_id. For this to be possible, we will need to 
-	//       use bare sendmsg() instead of sctp_sendmsg().
+	//	 use bare sendmsg() instead of sctp_sendmsg().
 
 	if (strlen(to) == 0) {
 		// special case: should pass NULL 
@@ -1419,39 +1431,39 @@ static PyObject* sctp_send_msg(PyObject* dummy, PyObject* args)
 		return ret;
 	}
 
-	ret = PyInt_FromLong(size_sent);
+	ret = PyLong_FromLong(size_sent);
 	return ret;
 }
 
 void interpret_sndrcvinfo(PyObject* dict, const struct sctp_sndrcvinfo* sinfo)
 {
-	PyDict_SetItemString(dict, "stream", PyInt_FromLong(sinfo->sinfo_stream));
-	PyDict_SetItemString(dict, "ssn", PyInt_FromLong(sinfo->sinfo_ssn));
-	PyDict_SetItemString(dict, "flags", PyInt_FromLong(sinfo->sinfo_flags));
-	PyDict_SetItemString(dict, "ppid", PyInt_FromLong(sinfo->sinfo_ppid));
-	PyDict_SetItemString(dict, "context", PyInt_FromLong(sinfo->sinfo_context));
-	PyDict_SetItemString(dict, "timetolive", PyInt_FromLong(sinfo->sinfo_timetolive));
-	PyDict_SetItemString(dict, "tsn", PyInt_FromLong(sinfo->sinfo_tsn));
-	PyDict_SetItemString(dict, "cumtsn", PyInt_FromLong(sinfo->sinfo_cumtsn));
-	PyDict_SetItemString(dict, "assoc_id", PyInt_FromLong(sinfo->sinfo_assoc_id));
+	PyDict_SetItemString(dict, "stream", PyLong_FromLong(sinfo->sinfo_stream));
+	PyDict_SetItemString(dict, "ssn", PyLong_FromLong(sinfo->sinfo_ssn));
+	PyDict_SetItemString(dict, "flags", PyLong_FromLong(sinfo->sinfo_flags));
+	PyDict_SetItemString(dict, "ppid", PyLong_FromLong(sinfo->sinfo_ppid));
+	PyDict_SetItemString(dict, "context", PyLong_FromLong(sinfo->sinfo_context));
+	PyDict_SetItemString(dict, "timetolive", PyLong_FromLong(sinfo->sinfo_timetolive));
+	PyDict_SetItemString(dict, "tsn", PyLong_FromLong(sinfo->sinfo_tsn));
+	PyDict_SetItemString(dict, "cumtsn", PyLong_FromLong(sinfo->sinfo_cumtsn));
+	PyDict_SetItemString(dict, "assoc_id", PyLong_FromLong(sinfo->sinfo_assoc_id));
 }
 
 void interpret_notification(PyObject* dict, const void *pnotif, int size)
 {
 	const union sctp_notification *notif = pnotif;
-	PyDict_SetItemString(dict, "type", PyInt_FromLong(notif->sn_header.sn_type));
-	PyDict_SetItemString(dict, "flags", PyInt_FromLong(notif->sn_header.sn_flags));
-	PyDict_SetItemString(dict, "length", PyInt_FromLong(notif->sn_header.sn_length));
+	PyDict_SetItemString(dict, "type", PyLong_FromLong(notif->sn_header.sn_type));
+	PyDict_SetItemString(dict, "flags", PyLong_FromLong(notif->sn_header.sn_flags));
+	PyDict_SetItemString(dict, "length", PyLong_FromLong(notif->sn_header.sn_length));
 
 	switch (notif->sn_header.sn_type) {
 	case SCTP_ASSOC_CHANGE:
 		{
 		const struct sctp_assoc_change* n = &(notif->sn_assoc_change);
-		PyDict_SetItemString(dict, "state", PyInt_FromLong(n->sac_state));
-		PyDict_SetItemString(dict, "error", PyInt_FromLong(n->sac_error));
-		PyDict_SetItemString(dict, "outbound_streams", PyInt_FromLong(n->sac_outbound_streams));
-		PyDict_SetItemString(dict, "inbound_streams", PyInt_FromLong(n->sac_inbound_streams));
-		PyDict_SetItemString(dict, "assoc_id", PyInt_FromLong(n->sac_assoc_id));
+		PyDict_SetItemString(dict, "state", PyLong_FromLong(n->sac_state));
+		PyDict_SetItemString(dict, "error", PyLong_FromLong(n->sac_error));
+		PyDict_SetItemString(dict, "outbound_streams", PyLong_FromLong(n->sac_outbound_streams));
+		PyDict_SetItemString(dict, "inbound_streams", PyLong_FromLong(n->sac_inbound_streams));
+		PyDict_SetItemString(dict, "assoc_id", PyLong_FromLong(n->sac_assoc_id));
 		}
 		break;
 	case SCTP_PEER_ADDR_CHANGE: 
@@ -1466,8 +1478,8 @@ void interpret_notification(PyObject* dict, const void *pnotif, int size)
 		if (from_sockaddr((struct sockaddr*) &(n->spc_aaddr), &family, &len, &port, 
 									caddr, sizeof(caddr))) {
 			oaddr = PyTuple_New(2);
-			PyTuple_SetItem(oaddr, 0, PyString_FromString(caddr));
-			PyTuple_SetItem(oaddr, 1, PyInt_FromLong(port));
+			PyTuple_SetItem(oaddr, 0, PyUnicode_FromString(caddr));
+			PyTuple_SetItem(oaddr, 1, PyLong_FromLong(port));
 		} else {
 			// something went wrong
 			oaddr = Py_None;
@@ -1475,9 +1487,9 @@ void interpret_notification(PyObject* dict, const void *pnotif, int size)
 		}
 
 		PyDict_SetItemString(dict, "addr", oaddr);
-		PyDict_SetItemString(dict, "state", PyInt_FromLong(n->spc_state));
-		PyDict_SetItemString(dict, "error", PyInt_FromLong(n->spc_error));
-		PyDict_SetItemString(dict, "assoc_id", PyInt_FromLong(n->spc_assoc_id));
+		PyDict_SetItemString(dict, "state", PyLong_FromLong(n->spc_state));
+		PyDict_SetItemString(dict, "error", PyLong_FromLong(n->spc_error));
+		PyDict_SetItemString(dict, "assoc_id", PyLong_FromLong(n->spc_assoc_id));
 		}
 		break;
 	case SCTP_SEND_FAILED:
@@ -1490,9 +1502,9 @@ void interpret_notification(PyObject* dict, const void *pnotif, int size)
 			PyObject* info = PyDict_New();
 			interpret_sndrcvinfo(info, &(n->ssf_info));
 			PyDict_SetItemString(dict, "_info", info);
-			PyDict_SetItemString(dict, "error", PyInt_FromLong(n->ssf_error));
-			PyDict_SetItemString(dict, "assoc_id", PyInt_FromLong(n->ssf_assoc_id));
-			PyDict_SetItemString(dict, "data", PyString_FromStringAndSize(cdata, ldata));
+			PyDict_SetItemString(dict, "error", PyLong_FromLong(n->ssf_error));
+			PyDict_SetItemString(dict, "assoc_id", PyLong_FromLong(n->ssf_assoc_id));
+			PyDict_SetItemString(dict, "data", PyUnicode_FromStringAndSize(cdata, ldata));
 		}
 		}
 		break;
@@ -1503,30 +1515,30 @@ void interpret_notification(PyObject* dict, const void *pnotif, int size)
 		int ldata = size - sizeof(struct sctp_remote_error);
 		
 		if (ldata >= 0) {
-			PyDict_SetItemString(dict, "error", PyInt_FromLong(n->sre_error));
-			PyDict_SetItemString(dict, "assoc_id", PyInt_FromLong(n->sre_assoc_id));
-			PyDict_SetItemString(dict, "data", PyString_FromStringAndSize(cdata, ldata));
+			PyDict_SetItemString(dict, "error", PyLong_FromLong(n->sre_error));
+			PyDict_SetItemString(dict, "assoc_id", PyLong_FromLong(n->sre_assoc_id));
+			PyDict_SetItemString(dict, "data", PyUnicode_FromStringAndSize(cdata, ldata));
 		}
 		}
 		break;
 	case SCTP_SHUTDOWN_EVENT:
 		{
 		const struct sctp_shutdown_event* n = &(notif->sn_shutdown_event);
-		PyDict_SetItemString(dict, "assoc_id", PyInt_FromLong(n->sse_assoc_id));
+		PyDict_SetItemString(dict, "assoc_id", PyLong_FromLong(n->sse_assoc_id));
 		}
 		break;
 	case SCTP_PARTIAL_DELIVERY_EVENT:
 		{
 		const struct sctp_pdapi_event* n = &(notif->sn_pdapi_event);
-		PyDict_SetItemString(dict, "indication", PyInt_FromLong(n->pdapi_indication));
-		PyDict_SetItemString(dict, "assoc_id", PyInt_FromLong(n->pdapi_assoc_id));
+		PyDict_SetItemString(dict, "indication", PyLong_FromLong(n->pdapi_indication));
+		PyDict_SetItemString(dict, "assoc_id", PyLong_FromLong(n->pdapi_assoc_id));
 		}
 		break;
 	case SCTP_ADAPTATION_INDICATION:
 		{
 		const struct sctp_adaptation_event* n = &(notif->sn_adaptation_event);
-		PyDict_SetItemString(dict, "adaptation_ind", PyInt_FromLong(n->sai_adaptation_ind));
-		PyDict_SetItemString(dict, "assoc_id", PyInt_FromLong(n->sai_assoc_id));
+		PyDict_SetItemString(dict, "adaptation_ind", PyLong_FromLong(n->sai_adaptation_ind));
+		PyDict_SetItemString(dict, "assoc_id", PyLong_FromLong(n->sai_assoc_id));
 		}
 		break;
 	}
@@ -1581,8 +1593,8 @@ static PyObject* sctp_recv_msg(PyObject* dummy, PyObject* args)
 
 	if (from_sockaddr((struct sockaddr*) &sfrom, &family, &len, &port, cfrom, sizeof(cfrom))) {
 		oaddr = PyTuple_New(2);
-		PyTuple_SetItem(oaddr, 0, PyString_FromString(cfrom));
-		PyTuple_SetItem(oaddr, 1, PyInt_FromLong(port));
+		PyTuple_SetItem(oaddr, 0, PyUnicode_FromString(cfrom));
+		PyTuple_SetItem(oaddr, 1, PyLong_FromLong(port));
 	} else {
 		// something went wrong
 		oaddr = Py_None;
@@ -1591,9 +1603,9 @@ static PyObject* sctp_recv_msg(PyObject* dummy, PyObject* args)
 			
 	ret = PyTuple_New(4);
 	PyTuple_SetItem(ret, 0, oaddr);
-	PyTuple_SetItem(ret, 1, PyInt_FromLong(flags));
+	PyTuple_SetItem(ret, 1, PyLong_FromLong(flags));
 	if (size >= 0) {
-		PyTuple_SetItem(ret, 2, PyString_FromStringAndSize(msg, size));
+		PyTuple_SetItem(ret, 2, PyUnicode_FromStringAndSize(msg, size));
 	} else {
 		PyTuple_SetItem(ret, 2, Py_None);
 		Py_INCREF(Py_None);
