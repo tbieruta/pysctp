@@ -41,6 +41,7 @@ static PyObject* set_adaptation(PyObject* dummy, PyObject* args);
 static PyObject* set_peer_primary(PyObject* dummy, PyObject* args);
 static PyObject* set_primary(PyObject* dummy, PyObject* args);
 static PyObject* bindx(PyObject* dummy, PyObject* args);
+static PyObject* connectx(PyObject* dummy, PyObject* args);
 static PyObject* getpaddrs(PyObject* dummy, PyObject* args);
 static PyObject* getladdrs(PyObject* dummy, PyObject* args);
 static PyObject* sctp_send_msg(PyObject* dummy, PyObject* args);
@@ -70,7 +71,7 @@ static PyMethodDef _sctpMethods[] =
 	{"have_sctp_prsctp", have_sctp_prsctp, METH_VARARGS, ""},
 	{"have_sctp_addip", have_sctp_addip, METH_VARARGS, ""},
 	{"bindx", bindx, METH_VARARGS, ""},
-//	{"connectx", connectx, METH_VARARGS, ""},
+	{"connectx", connectx, METH_VARARGS, ""},
 	{"getpaddrs", getpaddrs, METH_VARARGS, ""},
 	{"getladdrs", getladdrs, METH_VARARGS, ""},
 	{"peeloff", peeloff, METH_VARARGS, ""},
@@ -1259,6 +1260,73 @@ static PyObject* bindx(PyObject* dummy, PyObject* args)
 	}
 
 	if (sctp_bindx(fd, saddrs, addrcount, flags)) {
+		PyErr_SetFromErrno(PyExc_IOError);
+	} else {
+		ret = Py_None; Py_INCREF(ret);
+	}
+
+	free(saddrs);
+	return ret;
+}
+
+static PyObject* connectx(PyObject* dummy, PyObject* args)
+{
+	PyObject* ret = 0;
+	int fd;
+	PyObject* addrs;
+	struct sockaddr saddr;
+	struct sockaddr* saddrs;
+	int saddr_len, saddrs_len;
+	int addrcount;
+	int x;
+
+	if (! PyArg_ParseTuple(args, "iO", &fd, &addrs)) {
+		return ret;
+	}
+
+	if (! PySequence_Check(addrs)) {
+		PyErr_SetString(PyExc_ValueError, "Second parameter must be a sequence of address/port tuples");
+		return ret;
+	}
+
+	addrcount = PySequence_Length(addrs);
+	if (addrcount <= 0) {
+		PyErr_SetString(PyExc_ValueError, "Second parameter must be a non-empty sequence");
+		return ret;
+	}
+
+	saddrs_len = 0;
+	saddrs = (struct sockaddr*) malloc(saddrs_len);
+
+	for(x = 0; x < addrcount; ++x) {
+		const char* caddr;
+		int iport;
+
+		PyObject* otuple = PySequence_GetItem(addrs, x);
+
+		if (! PyArg_ParseTuple(otuple, "si", &caddr, &iport)) {
+			free(saddrs);
+			return ret;
+		}
+		
+		if (! to_sockaddr(caddr, iport, &saddr, &saddr_len)) {
+			PyErr_Format(PyExc_ValueError, "Invalid address: %s", caddr);
+			free(saddrs);
+			return ret;
+		}
+
+		if (saddr_len == 0) {
+			PyErr_Format(PyExc_ValueError, "Invalid address family: %s", caddr);
+			free(saddrs);
+			return ret;
+		}
+
+		saddrs = realloc(saddrs, saddrs_len + saddr_len);
+		memcpy( ((char*) saddrs) + saddrs_len, &saddr, saddr_len);
+		saddrs_len += saddr_len;
+	}
+
+	if (sctp_connectx(fd, saddrs, addrcount, NULL)) {
 		PyErr_SetFromErrno(PyExc_IOError);
 	} else {
 		ret = Py_None; Py_INCREF(ret);
