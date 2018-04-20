@@ -7,8 +7,8 @@ Copyright (c) 2009 Philippe Langlois. All rights reserved.
 
 from distutils.core import setup, Extension
 
-setup(name='pysctp',
-      version='0.5',
+setup(name='pysctp3',
+      version='0.7',
       license = "LGPL",
       description = 'pysctp is a python module for the SCTP protocol stack and library. ',
       long_description = 'pysctp is a python module for the SCTP protocol stack and library. It is the socket api implementation, not the SCTPlib implementation (this latest one is not supported anymore by their original developers). On Mac OS X you will need the SCTP NKE (Kernel Extensions) to make it work, use: http://sctp.fh-muenster.de/sctp-nke.html. On Debian-based systems, you need a SCTP-aware kernel (most are) and install the following packages: apt-get install libsctp-dev libsctp1 lksctp-tools',

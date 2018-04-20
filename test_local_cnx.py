@@ -25,7 +25,7 @@ tcp = sctpsocket_tcp(socket.AF_INET)
 
 saddr = (server, tcpport)
  
-print "TCP ", saddr, " ----------------------------------------------"
+print("TCP ", saddr, " ----------------------------------------------")
 
 tcp.initparams.max_instreams = 3
 tcp.initparams.num_ostreams = 3
@@ -38,11 +38,11 @@ tcp.connect(saddr)
 tcp.sctp_send("ABCDEF: TEST SUCCEEDED (test_local_cnx.py (C) 2009 Philippe Langlois)\n\l")
 while 1:
     fromaddr, flags, msgret, notif = tcp.sctp_recv(1000)
-    print "	Msg arrived, flag %d" % flags
+    print("	Msg arrived, flag %d" % flags)
 
     if flags & FLAG_NOTIFICATION:
         raise "We did not subscribe to receive notifications!"
     else:
-	print "%s" % msgret
+	    print("%s" % msgret)
 
 tcp.close()
