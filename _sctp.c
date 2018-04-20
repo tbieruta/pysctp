@@ -1673,7 +1673,7 @@ static PyObject* sctp_recv_msg(PyObject* dummy, PyObject* args)
 	PyTuple_SetItem(ret, 0, oaddr);
 	PyTuple_SetItem(ret, 1, PyLong_FromLong(flags));
 	if (size >= 0) {
-		PyTuple_SetItem(ret, 2, PyUnicode_FromStringAndSize(msg, size));
+		PyTuple_SetItem(ret, 2, PyBytes_FromStringAndSize(msg, size));
 	} else {
 		PyTuple_SetItem(ret, 2, Py_None);
 		Py_INCREF(Py_None);
